@@ -16,7 +16,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isAdmin => _user?.isAdmin ?? false;
   bool get isResident => _user?.isResident ?? false;
 
-  // Listen to auth state on app start
+  // auth state on app start
   void init() {
     _authService.authStateChanges.listen((firebaseUser) async {
       if (firebaseUser == null) {
@@ -28,7 +28,7 @@ class AuthProvider extends ChangeNotifier {
     });
   }
 
-  // Login
+  
   Future<bool> login(String email, String password) async {
     _isLoading = true;
     _errorMessage = null;
@@ -47,7 +47,7 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // Register
+  
   Future<bool> register({
     required String email,
     required String password,
