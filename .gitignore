@@ -48,6 +48,9 @@ build/
 # Firebase
 google-services.json
 GoogleService-Info.plist
+lib/firebase_options.dart
+google-services.json
+GoogleService-Info.plist
 
 # Environment
 .env
