@@ -3,14 +3,14 @@ class UserModel {
   final String name;
   final String email;
   final String role;
-  final String purok;
+  final String barangay;
 
   UserModel({
     required this.uid,
     required this.name,
     required this.email,
     required this.role,
-    required this.purok,
+    required this.barangay,
   });
 
   factory UserModel.fromMap(String uid, Map<String, dynamic> data) {
@@ -19,7 +19,7 @@ class UserModel {
       name: data['name'] ?? '',
       email: data['email'] ?? '',
       role: data['role'] ?? 'resident',
-      purok: data['purok'] ?? '',
+      barangay: data['barangay'] ?? '',
     );
   }
 
@@ -28,7 +28,7 @@ class UserModel {
       'name': name,
       'email': email,
       'role': role,
-      'purok': purok,
+      'barangay': barangay,
     };
   }
 

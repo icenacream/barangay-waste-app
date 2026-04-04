@@ -6,9 +6,8 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  User? get currentUser => _auth.currentUser; //get the current firebase user jajafas
-
-  Stream<User?> get authStateChanges => _auth.authStateChanges(); // stream auth state
+  User? get currentUser => _auth.currentUser;
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   Future<UserModel?> login(String email, String password) async {
     try {
@@ -16,13 +15,11 @@ class AuthService {
         email: email.trim(),
         password: password.trim(),
       );
-
       final user = credential.user;
       if (user == null) return null;
-
       return await getUserData(user.uid);
     } on FirebaseAuthException catch (e) {
-      throw _handleAuthError (e);
+      throw _handleAuthError(e);
     }
   }
 
@@ -30,7 +27,7 @@ class AuthService {
     required String email,
     required String password,
     required String name,
-    required String purok,
+    required String barangay,
     required String role,
   }) async {
     try {
@@ -38,7 +35,6 @@ class AuthService {
         email: email.trim(),
         password: password.trim(),
       );
-
       final user = credential.user;
       if (user == null) return null;
 
@@ -47,7 +43,7 @@ class AuthService {
         name: name.trim(),
         email: email.trim(),
         role: role,
-        purok: purok.trim(),
+        barangay: barangay.trim(),
       );
 
       await _firestore
@@ -71,11 +67,9 @@ class AuthService {
     }
   }
 
-
   Future<void> logout() async {
     await _auth.signOut();
   }
-
 
   String _handleAuthError(FirebaseAuthException e) {
     switch (e.code) {

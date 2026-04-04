@@ -4,7 +4,7 @@ class RequestModel {
   final String id;
   final String residentId;
   final String residentName;
-  final String purok;
+  final String barangay;
   final String type;
   final String message;
   final String status;
@@ -15,7 +15,7 @@ class RequestModel {
     required this.id,
     required this.residentId,
     required this.residentName,
-    required this.purok,
+    required this.barangay,
     required this.type,
     required this.message,
     required this.status,
@@ -28,7 +28,7 @@ class RequestModel {
       id: id,
       residentId: data['residentId'] ?? '',
       residentName: data['residentName'] ?? '',
-      purok: data['purok'] ?? '',
+      barangay: data['barangay'] ?? '',
       type: data['type'] ?? 'request',
       message: data['message'] ?? '',
       status: data['status'] ?? 'pending',
@@ -41,7 +41,7 @@ class RequestModel {
     return {
       'residentId': residentId,
       'residentName': residentName,
-      'purok': purok,
+      'barangay': barangay,
       'type': type,
       'message': message,
       'status': status,
