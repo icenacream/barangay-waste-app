@@ -46,10 +46,7 @@ class AuthService {
         barangay: barangay.trim(),
       );
 
-      await _firestore
-          .collection('users')
-          .doc(user.uid)
-          .set(newUser.toMap());
+      await _firestore.collection('users').doc(user.uid).set(newUser.toMap());
 
       return newUser;
     } on FirebaseAuthException catch (e) {
@@ -77,14 +74,18 @@ class AuthService {
         return 'No account found with this email.';
       case 'wrong-password':
         return 'Incorrect password.';
-      case 'email-already-in-use':
-        return 'This email is already registered.';
+      case 'invalid-credential':
+        return 'Incorrect email or password.';
       case 'invalid-email':
         return 'Invalid email address.';
+      case 'email-already-in-use':
+        return 'This email is already registered.';
       case 'weak-password':
         return 'Password must be at least 6 characters.';
       case 'too-many-requests':
         return 'Too many attempts. Please try again later.';
+      case 'network-request-failed':
+        return 'No internet connection. Please try again.';
       default:
         return 'Something went wrong. Please try again.';
     }
