@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'providers/auth_provider.dart';
+import 'router/app_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,18 +20,19 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => AuthProvider()..init(),
-      child: MaterialApp(
-        title: 'Barangay Waste App',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorSchemeSeed: Colors.green,
-          useMaterial3: true,
-        ),
-        home: const Scaffold(
-          body: Center(
-            child: Text('Auth ready!'),
-          ),
-        ),
+      child: Builder(
+        builder: (context) {
+          final router = AppRouter.createRouter(context);
+          return MaterialApp.router(
+            title: 'BrgyWaste',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              colorSchemeSeed: Colors.blue,
+              useMaterial3: true,
+            ),
+            routerConfig: router,
+          );
+        },
       ),
     );
   }
