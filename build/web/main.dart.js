@@ -43321,10 +43321,12 @@ case 2:return A.J(null,r)}})
 return A.K($async$lF,r)},
 P5(a){switch(a.c){case"user-not-found":return"No account found with this email."
 case"wrong-password":return"Incorrect password."
-case"email-already-in-use":return"This email is already registered."
+case"invalid-credential":return"Incorrect email or password."
 case"invalid-email":return"Invalid email address."
+case"email-already-in-use":return"This email is already registered."
 case"weak-password":return"Password must be at least 6 characters."
 case"too-many-requests":return"Too many attempts. Please try again later."
+case"network-request-failed":return"No internet connection. Please try again."
 default:return"Something went wrong. Please try again."}}}
 A.Ph.prototype={
 ro(a){return this.ZT(a)},
