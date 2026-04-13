@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import '../resident/home_screen.dart';
+import '../resident/schedule_screen.dart';
+import '../resident/request_screen.dart';
+import '../resident/profile_screen.dart';
 
 class ResidentShell extends StatefulWidget {
   final Widget child;
@@ -10,50 +13,49 @@ class ResidentShell extends StatefulWidget {
 }
 
 class _ResidentShellState extends State<ResidentShell> {
-  int _previousIndex = 0;
+  late final PageController _pageController;
+  int _currentIndex = 0;
 
-  int _selectedIndex(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
-    if (location == '/home') return 0;
-    if (location == '/schedule') return 1;
-    if (location == '/request') return 2;
-    if (location == '/profile') return 3;
-    return 0;
+  final List<Widget> _screens = const [
+    HomeScreen(),
+    ScheduleScreen(),
+    RequestScreen(),
+    ProfileScreen(),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: 0);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onTabTapped(int index) {
+    if (index == _currentIndex) return;
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+    setState(() => _currentIndex = index);
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentIndex = _selectedIndex(context);
-
     return Scaffold(
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 200),
-        switchInCurve: Curves.easeIn,
-        switchOutCurve: Curves.easeOut,
-        transitionBuilder: (child, animation) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-        child: KeyedSubtree(key: ValueKey(currentIndex), child: widget.child),
+      body: PageView(
+        controller: _pageController,
+        physics: const NeverScrollableScrollPhysics(),
+        children: _screens,
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: currentIndex,
-        onDestinationSelected: (index) {
-          setState(() => _previousIndex = currentIndex);
-          switch (index) {
-            case 0:
-              context.go('/home');
-              break;
-            case 1:
-              context.go('/schedule');
-              break;
-            case 2:
-              context.go('/request');
-              break;
-            case 3:
-              context.go('/profile');
-              break;
-          }
-        },
+        selectedIndex: _currentIndex,
+        onDestinationSelected: _onTabTapped,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
