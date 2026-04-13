@@ -27,23 +27,34 @@ class _ResidentShellState extends State<ResidentShell> {
 
     return Scaffold(
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 250),
+        duration: const Duration(milliseconds: 300),
+        reverseDuration: const Duration(milliseconds: 300),
         transitionBuilder: (child, animation) {
           final isGoingRight = currentIndex > _previousIndex;
-          final begin = Offset(isGoingRight ? 1.0 : -1.0, 0.0);
-          const end = Offset.zero;
-          final tween = Tween(begin: begin, end: end).chain(
-            CurveTween(curve: Curves.easeInOut),
+          final slideIn =
+              Tween<Offset>(
+                begin: Offset(isGoingRight ? 1.0 : -1.0, 0.0),
+                end: Offset.zero,
+              ).animate(
+                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+              );
+          final fadeIn = Tween<double>(begin: 0.0, end: 1.0).animate(
+            CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
           );
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
+          return FadeTransition(
+            opacity: fadeIn,
+            child: SlideTransition(position: slideIn, child: child),
           );
         },
-        child: KeyedSubtree(
-          key: ValueKey(currentIndex),
-          child: widget.child,
-        ),
+        layoutBuilder: (currentChild, previousChildren) {
+          return Stack(
+            children: [
+              ...previousChildren,
+              if (currentChild != null) currentChild,
+            ],
+          );
+        },
+        child: KeyedSubtree(key: ValueKey(currentIndex), child: widget.child),
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: currentIndex,
