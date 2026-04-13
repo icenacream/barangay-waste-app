@@ -27,32 +27,11 @@ class _ResidentShellState extends State<ResidentShell> {
 
     return Scaffold(
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        reverseDuration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 200),
+        switchInCurve: Curves.easeIn,
+        switchOutCurve: Curves.easeOut,
         transitionBuilder: (child, animation) {
-          final isGoingRight = currentIndex > _previousIndex;
-          final slideIn =
-              Tween<Offset>(
-                begin: Offset(isGoingRight ? 1.0 : -1.0, 0.0),
-                end: Offset.zero,
-              ).animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-              );
-          final fadeIn = Tween<double>(begin: 0.0, end: 1.0).animate(
-            CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-          );
-          return FadeTransition(
-            opacity: fadeIn,
-            child: SlideTransition(position: slideIn, child: child),
-          );
-        },
-        layoutBuilder: (currentChild, previousChildren) {
-          return Stack(
-            children: [
-              ...previousChildren,
-              if (currentChild != null) currentChild,
-            ],
-          );
+          return FadeTransition(opacity: animation, child: child);
         },
         child: KeyedSubtree(key: ValueKey(currentIndex), child: widget.child),
       ),
