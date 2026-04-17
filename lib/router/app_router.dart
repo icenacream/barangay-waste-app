@@ -7,9 +7,15 @@ import '../screens/auth/register_screen.dart';
 import '../screens/resident/resident_shell.dart';
 import '../screens/resident/home_screen.dart';
 import '../screens/resident/schedule_screen.dart';
-import '../screens/resident/announcements_screen.dart';
 import '../screens/resident/request_screen.dart';
 import '../screens/resident/profile_screen.dart';
+import '../screens/admin/admin_shell.dart';
+import '../screens/admin/dashboard_screen.dart';
+import '../screens/admin/schedule_manager_screen.dart';
+import '../screens/admin/announcements_screen.dart';
+import '../screens/admin/user_management_screen.dart';
+import '../screens/admin/resident_inbox_screen.dart';
+import '../screens/admin/collection_history_screen.dart';
 
 class AppRouter {
   static GoRouter createRouter(BuildContext context) {
@@ -23,7 +29,10 @@ class AppRouter {
             state.matchedLocation == '/register';
 
         if (!isLoggedIn && !isOnAuth) return '/login';
-        if (isLoggedIn && isOnAuth) return '/home';
+        if (isLoggedIn && isOnAuth) {
+          if (authProvider.isAdmin) return '/admin/dashboard';
+          return '/home';
+        }
         return null;
       },
       refreshListenable: authProvider,
@@ -48,16 +57,41 @@ class AppRouter {
               builder: (context, state) => const ScheduleScreen(),
             ),
             GoRoute(
-              path: '/announcements',
-              builder: (context, state) => const AnnouncementsScreen(),
-            ),
-            GoRoute(
               path: '/request',
               builder: (context, state) => const RequestScreen(),
             ),
             GoRoute(
               path: '/profile',
               builder: (context, state) => const ProfileScreen(),
+            ),
+          ],
+        ),
+        ShellRoute(
+          builder: (context, state, child) => AdminShell(child: child),
+          routes: [
+            GoRoute(
+              path: '/admin/dashboard',
+              builder: (context, state) => const DashboardScreen(),
+            ),
+            GoRoute(
+              path: '/admin/schedules',
+              builder: (context, state) => const ScheduleManagerScreen(),
+            ),
+            GoRoute(
+              path: '/admin/announcements',
+              builder: (context, state) => const AdminAnnouncementsScreen(),
+            ),
+            GoRoute(
+              path: '/admin/residents',
+              builder: (context, state) => const UserManagementScreen(),
+            ),
+            GoRoute(
+              path: '/admin/inbox',
+              builder: (context, state) => const ResidentInboxScreen(),
+            ),
+            GoRoute(
+              path: '/admin/history',
+              builder: (context, state) => const CollectionHistoryScreen(),
             ),
           ],
         ),
