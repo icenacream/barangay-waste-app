@@ -247,10 +247,6 @@ Vercel automatically redeploys on every push.
 | Sandajan, Josiah B. | Full Stack Developer |
 | Sinag, Rash Ian B. | Full Stack Developer |
 
-**Course:** IT Professional Elective 1 — BSIT-2B-M
-**Instructor:** Dr. Mary Joy D. Vinas
-**School:** Technological University of the Philippines — Manila
-
 ---
 
 ## Common Issues
