@@ -276,8 +276,5 @@ npm install -g firebase-tools
 ### App shows blank screen on Chrome
 Make sure Firebase is initialized and `firebase_options.dart` exists. Run `flutterfire configure` if missing.
 
-### Admin dashboard not showing
-Admin dashboard requires a desktop browser with minimum 900px width. It will show a "Desktop only" message on mobile.
-
 
 [yoooooo](https://barangay-waste-app.vercel.app/)
