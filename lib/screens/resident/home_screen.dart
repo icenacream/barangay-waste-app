@@ -112,11 +112,32 @@ class _HomeScreenState extends State<HomeScreen> {
                       offset: const Offset(0, -24),
                       child: _buildNextCollectionCard(),
                     ),
-                    const Text(
-                      'Announcements',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF111111)),
+                    const SizedBox(height: 4),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Announcements',
+                          style: TextStyle(
+                            fontSize: 15, 
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF111111)
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {},
+                          child: const Text(
+                            'View All',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF1565C0),
+                              fontWeight: FontWeight.w600,
+                            )
+                          )
+                        )
+                      ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     _buildAnnouncementsList(),
                   ],
                 ),
@@ -227,30 +248,49 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildAnnouncementCard(AnnouncementModel announcement) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: const Border(left: BorderSide(color: Color(0xFF1565C0), width: 3)),
+        border: const Border(
+          left: BorderSide(color: Color(0xFF1565C0), width: 3),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ]
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             announcement.title,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF111111)),
+            style: 
+            const TextStyle(
+              fontSize: 13, 
+              fontWeight: FontWeight.w700, 
+              color: Color(0xFF111111)
+            ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             announcement.message,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF666666), height: 1.4),
+            style: const TextStyle(
+              fontSize: 13, 
+              color: Color(0xFF666666),
+              height: 1.5),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
             DateFormat('MMM d, yyyy').format(announcement.createdAt),
-            style: const TextStyle(fontSize: 11, color: Color(0xFF999999)),
+            style: const TextStyle(
+              fontSize: 11, 
+              color: Color(0xFF999999)),
           ),
         ],
       ),
