@@ -5,6 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../services/schedule_service.dart';
 import '../../services/announcement_service.dart';
 import '../../models/announcement_model.dart';
+import '../../services/notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -34,6 +35,15 @@ class _HomeScreenState extends State<HomeScreen> {
         _nextCollection = result;
         _loadingSchedule = false;
       });
+
+      // Schedule notification for next collection
+      if (result != null) {
+        await NotificationService().scheduleCollectionReminder(
+          collectionDate: result['date'],
+          barangay: result['barangay'],
+          time: result['time'],
+        );
+      }
     }
   }
 
@@ -83,7 +93,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: Colors.white.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.notifications_outlined, color: Colors.white, size: 20),
+                        child: const Icon(
+                          Icons.notifications_outlined,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
                       Positioned(
                         top: 4,
@@ -119,9 +133,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         const Text(
                           'Announcements',
                           style: TextStyle(
-                            fontSize: 15, 
+                            fontSize: 15,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF111111)
+                            color: Color(0xFF111111),
                           ),
                         ),
                         TextButton(
@@ -132,9 +146,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               fontSize: 13,
                               color: Color(0xFF1565C0),
                               fontWeight: FontWeight.w600,
-                            )
-                          )
-                        )
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
@@ -159,71 +173,97 @@ class _HomeScreenState extends State<HomeScreen> {
         border: Border.all(color: const Color(0xFFE0E8F0)),
       ),
       child: _loadingSchedule
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF1565C0)))
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF1565C0)),
+            )
           : _nextCollection == null
-              ? const Text('No upcoming collection.', style: TextStyle(color: Colors.grey))
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          ? const Text(
+              'No upcoming collection.',
+              style: TextStyle(color: Colors.grey),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'NEXT COLLECTION',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF888888),
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE3F2FD),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: const Color(0xFF90CAF9)),
-                          ),
-                          child: Text(
-                            _nextCollection!['status'] == 'rescheduled' ? 'Rescheduled' : 'Scheduled',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: Color(0xFF1565C0),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _nextCollection!['barangay'],
-                      style: const TextStyle(
-                        fontSize: 16,
+                    const Text(
+                      'NEXT COLLECTION',
+                      style: TextStyle(
+                        fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF111111),
+                        color: Color(0xFF888888),
+                        letterSpacing: 0.5,
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        const Icon(Icons.calendar_today_outlined, size: 14, color: Color(0xFF1565C0)),
-                        const SizedBox(width: 4),
-                        Text(
-                          DateFormat('MMMM d, yyyy').format(_nextCollection!['date']),
-                          style: const TextStyle(fontSize: 12, color: Color(0xFF555555)),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE3F2FD),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: const Color(0xFF90CAF9)),
+                      ),
+                      child: Text(
+                        _nextCollection!['status'] == 'rescheduled'
+                            ? 'Rescheduled'
+                            : 'Scheduled',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1565C0),
                         ),
-                        const SizedBox(width: 16),
-                        const Icon(Icons.access_time_outlined, size: 14, color: Color(0xFF1565C0)),
-                        const SizedBox(width: 4),
-                        Text(
-                          _nextCollection!['time'],
-                          style: const TextStyle(fontSize: 12, color: Color(0xFF555555)),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 8),
+                Text(
+                  _nextCollection!['barangay'],
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF111111),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.calendar_today_outlined,
+                      size: 14,
+                      color: Color(0xFF1565C0),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      DateFormat(
+                        'MMMM d, yyyy',
+                      ).format(_nextCollection!['date']),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF555555),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Icon(
+                      Icons.access_time_outlined,
+                      size: 14,
+                      color: Color(0xFF1565C0),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _nextCollection!['time'],
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF555555),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
     );
   }
 
@@ -232,14 +272,22 @@ class _HomeScreenState extends State<HomeScreen> {
       stream: _announcementService.getAnnouncements(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Color(0xFF1565C0)));
+          return const Center(
+            child: CircularProgressIndicator(color: Color(0xFF1565C0)),
+          );
         }
         final announcements = snapshot.data ?? [];
         if (announcements.isEmpty) {
-          return const Text('No announcements yet.', style: TextStyle(color: Colors.grey));
+          return const Text(
+            'No announcements yet.',
+            style: TextStyle(color: Colors.grey),
+          );
         }
         return Column(
-          children: announcements.take(3).map((a) => _buildAnnouncementCard(a)).toList(),
+          children: announcements
+              .take(3)
+              .map((a) => _buildAnnouncementCard(a))
+              .toList(),
         );
       },
     );
@@ -289,10 +337,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 8),
           Text(
             DateFormat('MMM d, yyyy').format(announcement.createdAt),
-            style: const TextStyle(
-              fontSize: 11,
-              color: Color(0xFF999999),
-            ),
+            style: const TextStyle(fontSize: 11, color: Color(0xFF999999)),
           ),
         ],
       ),
