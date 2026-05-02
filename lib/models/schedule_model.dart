@@ -14,11 +14,14 @@ class SettingsModel {
   });
 
   factory SettingsModel.fromMap(String id, Map<String, dynamic> data) {
+    final rawDays = List<String>.from(data['collectionDays'] ?? []);
+    // Filter out any bad entries that contain commas
+    final cleanDays = rawDays.where((d) => !d.contains(',')).toList();
     return SettingsModel(
       id: id,
       barangay: data['barangay'] ?? '',
       defaultTime: data['defaultTime'] ?? '7:00 AM',
-      collectionDays: List<String>.from(data['collectionDays'] ?? []),
+      collectionDays: cleanDays,
     );
   }
 
@@ -33,8 +36,13 @@ class SettingsModel {
 
   bool isCollectionDay(DateTime date) {
     const dayNames = [
-      'Monday', 'Tuesday', 'Wednesday',
-      'Thursday', 'Friday', 'Saturday', 'Sunday'
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
     ];
     final dayName = dayNames[date.weekday - 1];
     return collectionDays.contains(dayName);
