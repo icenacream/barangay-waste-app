@@ -1,4 +1,4 @@
-import 'package:barangay_waste_app/services/notifcation_services.dart';
+import 'package:barangay_waste_app/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
