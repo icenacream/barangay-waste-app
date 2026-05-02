@@ -13,24 +13,24 @@ class ScheduleService {
           .get();
       if (query.docs.isEmpty) return null;
       return SettingsModel.fromMap(
-          query.docs.first.id, query.docs.first.data());
+        query.docs.first.id,
+        query.docs.first.data(),
+      );
     } catch (e) {
       return null;
     }
   }
 
   Stream<List<ExceptionModel>> getExceptions(String barangay) {
-    final now = DateTime.now();
-    final startOfMonth = DateTime(now.year, now.month, 1);
     return _firestore
         .collection('exceptions')
         .where('barangay', isEqualTo: barangay)
-        .where('date',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
         .snapshots()
-        .map((snap) => snap.docs
-            .map((doc) => ExceptionModel.fromMap(doc.id, doc.data()))
-            .toList());
+        .map(
+          (snap) => snap.docs
+              .map((doc) => ExceptionModel.fromMap(doc.id, doc.data()))
+              .toList(),
+        );
   }
 
   Future<Map<String, dynamic>?> getNextCollection(String barangay) async {
@@ -40,8 +40,10 @@ class ScheduleService {
     final exceptions = await _firestore
         .collection('exceptions')
         .where('barangay', isEqualTo: barangay)
-        .where('date',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime.now()))
+        .where(
+          'date',
+          isGreaterThanOrEqualTo: Timestamp.fromDate(DateTime.now()),
+        )
         .get();
 
     final exceptionDates = <String, ExceptionModel>{};
