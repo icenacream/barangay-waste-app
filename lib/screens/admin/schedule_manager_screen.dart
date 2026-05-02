@@ -1,19 +1,155 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../models/schedule_model.dart';
 import '../../services/schedule_service.dart';
+import '../../providers/auth_provider.dart';
 
 class ScheduleManagerScreen extends StatefulWidget {
   const ScheduleManagerScreen({super.key});
 
   @override
-  State<ScheduleManagerScreen> createState() => _ScheduleManagerScreenState();
+  State<ScheduleManagerScreen> createState() =>
+      _ScheduleManagerScreenState();
 }
 
 class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
   String _filter = 'All';
   final ScheduleService _scheduleService = ScheduleService();
+  String _adminBarangay = 'Barangay San Jose';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = context.read<AuthProvider>().user;
+      if (user != null && mounted) {
+        setState(() => _adminBarangay = user.barangay);
+      }
+    });
+  }
+
+  void _showSettingsDialog(BuildContext context, SettingsModel settings) {
+    final timeController =
+        TextEditingController(text: settings.defaultTime);
+    List<String> selectedDays = List.from(settings.collectionDays);
+    const allDays = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ];
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => AlertDialog(
+          title: const Text('Default Collection Settings'),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Default Collection Time',
+                  style: TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: timeController,
+                  decoration: const InputDecoration(
+                    hintText: '7:00 AM',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Collection Days',
+                  style: TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: allDays.map((day) {
+                    final isSelected = selectedDays.contains(day);
+                    return GestureDetector(
+                      onTap: () {
+                        setModalState(() {
+                          if (isSelected) {
+                            selectedDays.remove(day);
+                          } else {
+                            selectedDays.add(day);
+                          }
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? const Color(0xFF1565C0)
+                              : Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isSelected
+                                ? const Color(0xFF1565C0)
+                                : const Color(0xFFE0E0E0),
+                          ),
+                        ),
+                        child: Text(
+                          day,
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: isSelected
+                                ? Colors.white
+                                : const Color(0xFF555555),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final updated = SettingsModel(
+                  id: settings.id,
+                  barangay: settings.barangay,
+                  defaultTime: timeController.text.trim(),
+                  collectionDays: selectedDays,
+                );
+                await _scheduleService.updateSettings(updated);
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1565C0),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +177,10 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
                     SizedBox(height: 4),
                     Text(
                       'Manage waste collection schedules',
-                      style: TextStyle(fontSize: 14, color: Color(0xFF666666)),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF666666),
+                      ),
                     ),
                   ],
                 ),
@@ -53,33 +192,114 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
                     backgroundColor: const Color(0xFF1565C0),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 14,
-                    ),
+                        horizontal: 20, vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                        borderRadius: BorderRadius.circular(10)),
                     elevation: 0,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
+            // Default settings card
+            FutureBuilder<SettingsModel?>(
+              future: _scheduleService.getSettings(_adminBarangay),
+              builder: (context, snapshot) {
+                final settings = snapshot.data;
+                return Container(
+                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFE8ECF0)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE3F2FD),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.settings_outlined,
+                          color: Color(0xFF1565C0),
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Default Collection Schedule',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF111111),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            settings == null
+                                ? const Text(
+                                    'Loading...',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF888888),
+                                    ),
+                                  )
+                                : Text(
+                                    '${settings.collectionDays.join(', ')}  ·  ${settings.defaultTime}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF555555),
+                                    ),
+                                  ),
+                          ],
+                        ),
+                      ),
+                      if (settings != null)
+                        ElevatedButton.icon(
+                          onPressed: () =>
+                              _showSettingsDialog(context, settings),
+                          icon: const Icon(Icons.edit_outlined, size: 16),
+                          label: const Text('Edit'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF1565C0),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
+            // Filter chips
             Row(
-              children: ['All', 'Scheduled', 'Cancelled', 'Rescheduled'].map((
-                f,
-              ) {
+              children: ['All', 'Scheduled', 'Cancelled', 'Rescheduled']
+                  .map((f) {
                 final isActive = _filter == f;
                 return GestureDetector(
                   onTap: () => setState(() => _filter = f),
                   child: Container(
                     margin: const EdgeInsets.only(right: 8),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
+                        horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: isActive ? const Color(0xFF1565C0) : Colors.white,
+                      color: isActive
+                          ? const Color(0xFF1565C0)
+                          : Colors.white,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: isActive
@@ -111,44 +331,39 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
                 ),
                 child: Column(
                   children: [
-                    // Table header
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 14,
-                      ),
+                          horizontal: 20, vertical: 14),
                       decoration: const BoxDecoration(
                         border: Border(
                           bottom: BorderSide(color: Color(0xFFEEEEEE)),
                         ),
                       ),
                       child: Row(
-                        children:
-                            [
-                                  'BARANGAY',
-                                  'DATE',
-                                  'TIME',
-                                  'STATUS',
-                                  'REASON',
-                                  'ACTIONS',
-                                ]
-                                .map(
-                                  (h) => Expanded(
-                                    child: Text(
-                                      h,
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF999999),
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
+                        children: [
+                          'BARANGAY',
+                          'DATE',
+                          'TIME',
+                          'STATUS',
+                          'REASON',
+                          'ACTIONS'
+                        ]
+                            .map(
+                              (h) => Expanded(
+                                child: Text(
+                                  h,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: Color(0xFF999999),
+                                    letterSpacing: 0.5,
                                   ),
-                                )
-                                .toList(),
+                                ),
+                              ),
+                            )
+                            .toList(),
                       ),
                     ),
-                    // Table body
                     Expanded(
                       child: StreamBuilder<QuerySnapshot>(
                         stream: FirebaseFirestore.instance
@@ -156,15 +371,16 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
                             .orderBy('date', descending: false)
                             .snapshots(),
                         builder: (context, snapshot) {
-                          if (!snapshot.hasData)
+                          if (!snapshot.hasData) {
                             return const Center(
-                              child: CircularProgressIndicator(),
-                            );
+                                child: CircularProgressIndicator());
+                          }
 
                           var docs = snapshot.data!.docs;
                           if (_filter != 'All') {
                             docs = docs.where((d) {
-                              final data = d.data() as Map<String, dynamic>;
+                              final data =
+                                  d.data() as Map<String, dynamic>;
                               return (data['type'] ?? '')
                                       .toString()
                                       .toLowerCase() ==
@@ -184,13 +400,11 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
                           return ListView.builder(
                             itemCount: docs.length,
                             itemBuilder: (context, index) {
-                              final data =
-                                  docs[index].data() as Map<String, dynamic>;
+                              final data = docs[index].data()
+                                  as Map<String, dynamic>;
                               final id = docs[index].id;
-                              final exception = ExceptionModel.fromMap(
-                                id,
-                                data,
-                              );
+                              final exception =
+                                  ExceptionModel.fromMap(id, data);
                               final isEven = index % 2 == 0;
 
                               return Container(
@@ -198,9 +412,7 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
                                     ? Colors.white
                                     : const Color(0xFFFAFAFA),
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 14,
-                                ),
+                                    horizontal: 20, vertical: 14),
                                 child: Row(
                                   children: [
                                     Expanded(
@@ -214,9 +426,8 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
                                     ),
                                     Expanded(
                                       child: Text(
-                                        DateFormat(
-                                          'MMM d, yyyy',
-                                        ).format(exception.date),
+                                        DateFormat('MMM d, yyyy')
+                                            .format(exception.date),
                                         style: const TextStyle(
                                           fontSize: 13,
                                           color: Color(0xFF555555),
@@ -236,7 +447,8 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
                                     ),
                                     Expanded(
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(
+                                        padding:
+                                            const EdgeInsets.symmetric(
                                           horizontal: 10,
                                           vertical: 4,
                                         ),
@@ -244,9 +456,8 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
                                           color: exception.isCancelled
                                               ? const Color(0xFFFFEBEE)
                                               : const Color(0xFFFFF3E0),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(20),
                                         ),
                                         child: Text(
                                           exception.isCancelled
@@ -284,9 +495,9 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
                                             ),
                                             onPressed: () =>
                                                 _showAddExceptionDialog(
-                                                  context,
-                                                  existing: exception,
-                                                ),
+                                              context,
+                                              existing: exception,
+                                            ),
                                           ),
                                           IconButton(
                                             icon: const Icon(
@@ -324,8 +535,7 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Exception'),
         content: const Text(
-          'Are you sure you want to delete this schedule exception?',
-        ),
+            'Are you sure you want to delete this schedule exception?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -333,7 +543,10 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -343,19 +556,14 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
     }
   }
 
-  void _showAddExceptionDialog(
-    BuildContext context, {
-    ExceptionModel? existing,
-  }) {
-    final barangayController = TextEditingController(
-      text: existing?.barangay ?? '',
-    );
-    final reasonController = TextEditingController(
-      text: existing?.reason ?? '',
-    );
-    final newTimeController = TextEditingController(
-      text: existing?.newTime ?? '',
-    );
+  void _showAddExceptionDialog(BuildContext context,
+      {ExceptionModel? existing}) {
+    final barangayController =
+        TextEditingController(text: existing?.barangay ?? _adminBarangay);
+    final reasonController =
+        TextEditingController(text: existing?.reason ?? '');
+    final newTimeController =
+        TextEditingController(text: existing?.newTime ?? '');
     String selectedType = existing?.type ?? 'cancelled';
     DateTime selectedDate = existing?.date ?? DateTime.now();
 
@@ -363,9 +571,9 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModalState) => AlertDialog(
-          title: Text(
-            existing == null ? 'Add Schedule Exception' : 'Edit Exception',
-          ),
+          title: Text(existing == null
+              ? 'Add Schedule Exception'
+              : 'Edit Exception'),
           content: SizedBox(
             width: 400,
             child: Column(
@@ -374,7 +582,8 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
               children: [
                 const Text(
                   'Barangay',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 6),
                 TextField(
@@ -387,7 +596,8 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
                 const SizedBox(height: 14),
                 const Text(
                   'Date',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 6),
                 GestureDetector(
@@ -396,10 +606,12 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
                       context: ctx,
                       initialDate: selectedDate,
                       firstDate: DateTime.now(),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                      lastDate: DateTime.now()
+                          .add(const Duration(days: 365)),
                     );
-                    if (picked != null)
+                    if (picked != null) {
                       setModalState(() => selectedDate = picked);
+                    }
                   },
                   child: Container(
                     padding: const EdgeInsets.all(12),
@@ -415,7 +627,9 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
                           color: Colors.grey,
                         ),
                         const SizedBox(width: 8),
-                        Text(DateFormat('MMM d, yyyy').format(selectedDate)),
+                        Text(
+                          DateFormat('MMM d, yyyy').format(selectedDate),
+                        ),
                       ],
                     ),
                   ),
@@ -423,31 +637,30 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
                 const SizedBox(height: 14),
                 const Text(
                   'Type',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 6),
                 DropdownButtonFormField<String>(
                   value: selectedType,
                   decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                  ),
+                      border: OutlineInputBorder()),
                   items: const [
                     DropdownMenuItem(
-                      value: 'cancelled',
-                      child: Text('Cancelled'),
-                    ),
+                        value: 'cancelled', child: Text('Cancelled')),
                     DropdownMenuItem(
-                      value: 'rescheduled',
-                      child: Text('Rescheduled'),
-                    ),
+                        value: 'rescheduled',
+                        child: Text('Rescheduled')),
                   ],
-                  onChanged: (v) => setModalState(() => selectedType = v!),
+                  onChanged: (v) =>
+                      setModalState(() => selectedType = v!),
                 ),
                 if (selectedType == 'rescheduled') ...[
                   const SizedBox(height: 14),
                   const Text(
                     'New Time',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 6),
                   TextField(
@@ -461,7 +674,8 @@ class _ScheduleManagerScreenState extends State<ScheduleManagerScreen> {
                 const SizedBox(height: 14),
                 const Text(
                   'Reason',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 6),
                 TextField(
