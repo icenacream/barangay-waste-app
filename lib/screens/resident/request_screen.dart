@@ -218,37 +218,29 @@ class _RequestScreenState extends State<RequestScreen> {
             ),
           ),
           const SizedBox(height: 10),
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
             children: _types.map((type) {
               final isSelected = _selectedType == type;
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => _selectedType = type),
-                  child: Container(
-                    margin: EdgeInsets.only(right: type != _types.last ? 8 : 0),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? const Color(0xFF1565C0)
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: isSelected
-                            ? const Color(0xFF1565C0)
-                            : const Color(0xFFE0E0E0),
-                        width: isSelected ? 1.5 : 1,
-                      ),
+              return GestureDetector(
+                onTap: () => setState(() => _selectedType = type),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isSelected ? const Color(0xFF1565C0) : Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isSelected ? const Color(0xFF1565C0) : const Color(0xFFE0E0E0),
+                      width: isSelected ? 1.5 : 1,
                     ),
-                    child: Text(
-                      type,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isSelected
-                            ? Colors.white
-                            : const Color(0xFF555555),
-                      ),
+                  ),
+                  child: Text(
+                    type,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isSelected ? Colors.white : const Color(0xFF555555),
                     ),
                   ),
                 ),
