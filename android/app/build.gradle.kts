@@ -9,7 +9,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.barangay_waste_app"
+    namespace = "com.example.qcecotrack"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
