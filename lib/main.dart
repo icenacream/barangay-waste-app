@@ -1,4 +1,4 @@
-import 'package:barangay_waste_app/services/notification_service.dart';
+import 'package:qc_echo_track/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
         builder: (context) {
           final router = AppRouter.createRouter(context);
           return MaterialApp.router(
-            title: 'BrgyWaste',
+            title: 'QCEchoTrack',
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
               colorSchemeSeed: Colors.blue,

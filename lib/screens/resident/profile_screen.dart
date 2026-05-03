@@ -116,7 +116,7 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
                     const Text(
-                      'BrgyWaste v1.0.0',
+                      'QCEchoTrack v1.0.0',
                       style: TextStyle(fontSize: 12, color: Color(0xFFBBBBBB)),
                     ),
                   ],
