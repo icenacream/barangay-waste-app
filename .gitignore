@@ -56,3 +56,6 @@ GoogleService-Info.plist
 # Environment
 .env
 *.env
+
+key.properties
+*.jks
