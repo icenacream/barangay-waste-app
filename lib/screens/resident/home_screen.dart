@@ -26,25 +26,33 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadNextCollection();
   }
 
-  Future<void> _loadNextCollection() async {
-    final user = context.read<AuthProvider>().user;
-    if (user == null) return;
+Future<void> _loadNextCollection() async {
+  final user = context.read<AuthProvider>().user;
+  if (user == null) {
+    print('❌ User is null');
+    setState(() => _loadingSchedule = false);
+    return;
+  }
+
+  print('✅ Barangay: ${user.barangay}');
+
+  try {
     final result = await _scheduleService.getNextCollection(user.barangay);
+    print('✅ Result: $result');
+
     if (mounted) {
       setState(() {
         _nextCollection = result;
         _loadingSchedule = false;
       });
-
-      if (result != null) {
-        await NotificationService().scheduleCollectionReminder(
-          collectionDate: result['date'],
-          barangay: result['barangay'],
-          time: result['time'],
-        );
-      }
+    }
+  } catch (e) {
+    print('❌ Error: $e');
+    if (mounted) {
+      setState(() => _loadingSchedule = false); // ✅ stop spinner even on error
     }
   }
+}
 
   @override
   Widget build(BuildContext context) {
