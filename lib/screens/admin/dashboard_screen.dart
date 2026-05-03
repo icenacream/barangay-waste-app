@@ -50,48 +50,85 @@ class DashboardScreen extends StatelessWidget {
   }
 
   Widget _buildMetricCards() {
-    return Row(
-      children: [
-        Expanded(
-          child: _metricCard(
-            'Total Schedules',
-            '48',
-            Icons.calendar_month_rounded,
-            const Color(0xFF1565C0),
-            const Color(0xFFE3F2FD),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _metricCard(
-            'Active Residents',
-            '1,234',
-            Icons.people_rounded,
-            const Color(0xFF2E7D32),
-            const Color(0xFFE8F5E9),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _metricCard(
-            'Pending Requests',
-            '12',
-            Icons.inbox_rounded,
-            const Color(0xFFE65100),
-            const Color(0xFFFFF3E0),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _metricCard(
-            'Completed Collections',
-            '156',
-            Icons.check_circle_rounded,
-            const Color(0xFF555555),
-            const Color(0xFFF5F5F5),
-          ),
-        ),
-      ],
+    return FutureBuilder<List<int>>(
+      future: Future.wait([
+        // Total Schedules = number of barangay settings docs
+        FirebaseFirestore.instance
+            .collection('settings')
+            .count()
+            .get()
+            .then((r) => r.count ?? 0),
+        // Active Residents = users with role 'resident'
+        FirebaseFirestore.instance
+            .collection('users')
+            .where('role', isEqualTo: 'resident')
+            .count()
+            .get()
+            .then((r) => r.count ?? 0),
+        // Pending Requests
+        FirebaseFirestore.instance
+            .collection('requests')
+            .where('status', isEqualTo: 'pending')
+            .count()
+            .get()
+            .then((r) => r.count ?? 0),
+        // Completed Collections — update 'type' value to match your Firestore
+        FirebaseFirestore.instance
+            .collection('exceptions')
+            .where('type', isEqualTo: 'completed')
+            .count()
+            .get()
+            .then((r) => r.count ?? 0),
+      ]),
+      builder: (context, snapshot) {
+        final counts = snapshot.data ?? [0, 0, 0, 0];
+        final fmt = NumberFormat('#,###');
+        final hasData = snapshot.hasData;
+
+        return Row(
+          children: [
+            Expanded(
+              child: _metricCard(
+                'Total Schedules',
+                hasData ? counts[0].toString() : '—',
+                Icons.calendar_month_rounded,
+                const Color(0xFF1565C0),
+                const Color(0xFFE3F2FD),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _metricCard(
+                'Active Residents',
+                hasData ? fmt.format(counts[1]) : '—',
+                Icons.people_rounded,
+                const Color(0xFF2E7D32),
+                const Color(0xFFE8F5E9),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _metricCard(
+                'Pending Requests',
+                hasData ? counts[2].toString() : '—',
+                Icons.inbox_rounded,
+                const Color(0xFFE65100),
+                const Color(0xFFFFF3E0),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _metricCard(
+                'Completed Collections',
+                hasData ? counts[3].toString() : '—',
+                Icons.check_circle_rounded,
+                const Color(0xFF555555),
+                const Color(0xFFF5F5F5),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -160,6 +197,7 @@ class DashboardScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
+          // Header row
           Table(
             columnWidths: const {
               0: FlexColumnWidth(3),
@@ -194,48 +232,60 @@ class DashboardScreen extends StatelessWidget {
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('settings')
-                .limit(5)
                 .snapshots(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData)
+            builder: (context, settingsSnap) {
+              if (!settingsSnap.hasData) {
                 return const Padding(
                   padding: EdgeInsets.all(16),
-                  child: CircularProgressIndicator(),
+                  child: Center(child: CircularProgressIndicator()),
                 );
-              final docs = snapshot.data!.docs;
-              if (docs.isEmpty)
+              }
+              final docs = settingsSnap.data!.docs;
+              if (docs.isEmpty) {
                 return const Padding(
                   padding: EdgeInsets.all(16),
                   child: Text('No schedules found.'),
                 );
+              }
+
+              // For each barangay, find its next collection day
+              final today = DateTime.now();
+              final base = DateTime(today.year, today.month, today.day);
+              const dayNames = [
+                'Monday', 'Tuesday', 'Wednesday', 'Thursday',
+                'Friday', 'Saturday', 'Sunday',
+              ];
 
               final List<Map<String, String>> rows = [];
               for (var doc in docs) {
                 final data = doc.data() as Map<String, dynamic>;
                 final barangay = data['barangay'] ?? '';
                 final time = data['defaultTime'] ?? '7:00 AM';
-                final days = List<String>.from(data['collectionDays'] ?? []);
-                DateTime check = DateTime.now();
+                final days = List<String>.from(data['collectionDays'] ?? [])
+                    .where((d) => !d.contains(','))
+                    .toList();
+
                 for (int i = 0; i < 7; i++) {
-                  check = DateTime.now().add(Duration(days: i));
-                  const dayNames = [
-                    'Monday',
-                    'Tuesday',
-                    'Wednesday',
-                    'Thursday',
-                    'Friday',
-                    'Saturday',
-                    'Sunday',
-                  ];
-                  if (days.contains(dayNames[check.weekday - 1])) {
+                  final checkDate = base.add(Duration(days: i));
+                  if (days.contains(dayNames[checkDate.weekday - 1])) {
                     rows.add({
                       'barangay': barangay,
-                      'date': DateFormat('MMM d, yyyy').format(check),
+                      'date': DateFormat('MMM d, yyyy').format(checkDate),
                       'time': time,
                     });
                     break;
                   }
                 }
+              }
+
+              // Sort by date ascending
+              rows.sort((a, b) => a['date']!.compareTo(b['date']!));
+
+              if (rows.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text('No upcoming schedules.'),
+                );
               }
 
               return Table(
@@ -344,19 +394,38 @@ class DashboardScreen extends StatelessWidget {
                 .limit(5)
                 .snapshots(),
             builder: (context, snapshot) {
-              if (!snapshot.hasData) return const CircularProgressIndicator();
+              if (!snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
               final docs = snapshot.data!.docs;
-              if (docs.isEmpty)
+              if (docs.isEmpty) {
                 return const Text(
                   'No requests yet.',
                   style: TextStyle(color: Colors.grey),
                 );
+              }
               return Column(
                 children: docs.map((doc) {
                   final data = doc.data() as Map<String, dynamic>;
                   final status = data['status'] ?? 'pending';
                   final type = data['type'] ?? 'request';
                   final isPending = status == 'pending';
+
+                  // Parse createdAt for display
+                  String timeAgo = '';
+                  if (data['createdAt'] != null) {
+                    final createdAt =
+                        (data['createdAt'] as Timestamp).toDate();
+                    final diff = DateTime.now().difference(createdAt);
+                    if (diff.inMinutes < 60) {
+                      timeAgo = '${diff.inMinutes}m ago';
+                    } else if (diff.inHours < 24) {
+                      timeAgo = '${diff.inHours}h ago';
+                    } else {
+                      timeAgo = DateFormat('MMM d').format(createdAt);
+                    }
+                  }
+
                   return Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(14),
@@ -370,12 +439,15 @@ class DashboardScreen extends StatelessWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              data['residentName'] ?? '',
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF111111),
+                            Expanded(
+                              child: Text(
+                                data['residentName'] ?? 'Unknown',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF111111),
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             Container(
@@ -408,12 +480,25 @@ class DashboardScreen extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          data['barangay'] ?? '',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF666666),
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              data['barangay'] ?? '',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF666666),
+                              ),
+                            ),
+                            if (timeAgo.isNotEmpty)
+                              Text(
+                                timeAgo,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: Color(0xFF999999),
+                                ),
+                              ),
+                          ],
                         ),
                         const SizedBox(height: 8),
                         Container(
