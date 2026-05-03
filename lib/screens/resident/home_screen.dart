@@ -36,7 +36,6 @@ class _HomeScreenState extends State<HomeScreen> {
         _loadingSchedule = false;
       });
 
-      // Schedule notification for next collection
       if (result != null) {
         await NotificationService().scheduleCollectionReminder(
           collectionDate: result['date'],

@@ -108,18 +108,17 @@ Future<void> init() async {
     required String barangay,
     required String time,
   }) async {
-    // Cancel existing collection reminders first
     await cancelNotification(1);
     await cancelNotification(2);
 
     final now = DateTime.now();
 
-    // Day before reminder at 8:00 PM
+    // Night before at 8:00 PM
     final dayBefore = DateTime(
       collectionDate.year,
       collectionDate.month,
       collectionDate.day - 1,
-      20, // 8:00 PM
+      20,
       0,
     );
 
@@ -138,7 +137,7 @@ Future<void> init() async {
       collectionDate.year,
       collectionDate.month,
       collectionDate.day,
-      6, // 6:00 AM
+      6,
       0,
     );
 
