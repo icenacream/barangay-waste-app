@@ -37,6 +37,9 @@ class ScheduleService {
     final settings = await getSettings(barangay);
     if (settings == null) return null;
 
+    final now = DateTime.now();
+    final startOfToday = DateTime(now.year, now.month, now.day);
+
     final exceptions = await _firestore
         .collection('exceptions')
         .where('barangay', isEqualTo: barangay)
@@ -53,11 +56,12 @@ class ScheduleService {
       exceptionDates[key] = model;
     }
 
-    DateTime checkDate = DateTime.now();
     for (int i = 0; i <= 30; i++) {
-      checkDate = DateTime.now().add(Duration(days: i));
+      final checkDate = startOfToday.add(Duration(days: i)); // stable base date
       final dateKey = checkDate.toIso8601String().substring(0, 10);
+
       if (!settings.isCollectionDay(checkDate)) continue;
+      
       final exception = exceptionDates[dateKey];
       if (exception != null && exception.isCancelled) continue;
       return {
