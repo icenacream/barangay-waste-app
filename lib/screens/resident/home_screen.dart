@@ -165,6 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildNextCollectionCard() {
     return Container(
       width: double.infinity,
+      constraints: const BoxConstraints(minHeight: 80),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -172,14 +173,14 @@ class _HomeScreenState extends State<HomeScreen> {
         border: Border.all(color: const Color(0xFFE0E8F0)),
       ),
       child: _loadingSchedule
-          ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFF1565C0)),
+          ? const SizedBox(
+              height: 48,
+              child: Center(
+                child: CircularProgressIndicator(color: Color(0xFF1565C0)),
+              ),
             )
           : _nextCollection == null
-          ? const Text(
-              'No upcoming collection.',
-              style: TextStyle(color: Colors.grey),
-            )
+          ? const Text('No upcoming collection.', style: TextStyle(color: Colors.grey))  
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
