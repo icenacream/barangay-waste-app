@@ -26,33 +26,35 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadNextCollection();
   }
 
-Future<void> _loadNextCollection() async {
-  final user = context.read<AuthProvider>().user;
-  if (user == null) {
-    print('❌ User is null');
-    setState(() => _loadingSchedule = false);
-    return;
-  }
-
-  print('✅ Barangay: ${user.barangay}');
-
-  try {
-    final result = await _scheduleService.getNextCollection(user.barangay);
-    print('✅ Result: $result');
-
-    if (mounted) {
-      setState(() {
-        _nextCollection = result;
-        _loadingSchedule = false;
-      });
+  Future<void> _loadNextCollection() async {
+    final user = context.read<AuthProvider>().user;
+    if (user == null) {
+      print('❌ User is null');
+      setState(() => _loadingSchedule = false);
+      return;
     }
-  } catch (e) {
-    print('❌ Error: $e');
-    if (mounted) {
-      setState(() => _loadingSchedule = false); // ✅ stop spinner even on error
+
+    print('✅ Barangay: ${user.barangay}');
+
+    try {
+      final result = await _scheduleService.getNextCollection(user.barangay);
+      print('✅ Result: $result');
+
+      if (mounted) {
+        setState(() {
+          _nextCollection = result;
+          _loadingSchedule = false;
+        });
+      }
+    } catch (e) {
+      print('❌ Error: $e');
+      if (mounted) {
+        setState(
+          () => _loadingSchedule = false,
+        ); // ✅ stop spinner even on error
+      }
     }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -188,7 +190,10 @@ Future<void> _loadNextCollection() async {
               ),
             )
           : _nextCollection == null
-          ? const Text('No upcoming collection.', style: TextStyle(color: Colors.grey))  
+          ? const Text(
+              'No upcoming collection.',
+              style: TextStyle(color: Colors.grey),
+            )
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

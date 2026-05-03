@@ -39,7 +39,7 @@ Future<void> init() async {
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
       'brgywaste_channel',
-      'QCEchoTrack Notifications',
+      'QCEcoTrack Notifications',
       channelDescription: 'Waste collection notifications',
       importance: Importance.max,
       priority: Priority.high,
@@ -65,7 +65,7 @@ Future<void> init() async {
     const AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
       'brgywaste_scheduled',
-      'QCEchoTrack Scheduled Notifications',
+      'QCEcoTrack Scheduled Notifications',
       channelDescription: 'Scheduled waste collection reminders',
       importance: Importance.max,
       priority: Priority.high,

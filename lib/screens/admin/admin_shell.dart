@@ -118,7 +118,7 @@ class AdminShell extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'BrgyWaste',
+                        'QCEcoTrack',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
